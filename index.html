@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1d6fcf">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roscas">
+<meta name="description" content="Consulta rápida de roscas para chão de fábrica">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>Consulta de Roscas</title>
+<style>
+:root{
+  --bg:#0a0f18;--bg2:#111827;--bg3:#1a2436;--bg4:#0e1929;
+  --border:#1e3a5f;--border2:#2a4f7a;
+  --azul:#1d6fcf;--azul2:#2585f0;--azul-dim:#0d3a72;
+  --ciano:#00c4e8;--verde:#22c55e;--amarelo:#f5c842;
+  --laranja:#f97316;--branco:#f0f6ff;--cinza:#8ba3bf;--cinza2:#4a6680;
+  --fonte-mono:'Courier New',Courier,monospace;
+  --fonte-ui:system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r:8px;--r2:12px;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bot: env(safe-area-inset-bottom);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{background:var(--bg);color:var(--branco);font-family:var(--fonte-ui);font-size:15px;min-height:100%;line-height:1.5;overscroll-behavior:none}
+
+/* ── HEADER ── */
+header{
+  background:var(--bg2);border-bottom:2px solid var(--azul);
+  padding:calc(14px + var(--safe-top)) 16px 14px;
+  display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:50;
+}
+.logo-icon{width:40px;height:40px;background:var(--azul);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:24px;height:24px;fill:var(--branco)}
+header h1{font-size:17px;font-weight:700;letter-spacing:.02em}
+header p{font-size:11px;color:var(--cinza);margin-top:1px}
+
+/* ── BANNER INSTALAR ── */
+#banner-instalar{
+  display:none;background:linear-gradient(135deg,var(--azul-dim),#0a2a55);
+  border-bottom:1px solid var(--azul);padding:12px 16px;
+  align-items:center;gap:12px;
+}
+#banner-instalar.show{display:flex}
+#banner-instalar p{flex:1;font-size:13px;color:var(--branco);line-height:1.4}
+#banner-instalar p span{display:block;font-size:11px;color:var(--cinza);margin-top:2px}
+.btn-instalar{background:var(--azul);color:var(--branco);border:none;border-radius:var(--r);padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--fonte-ui)}
+.btn-instalar:active{opacity:.8}
+.btn-fechar{background:none;border:none;color:var(--cinza);font-size:20px;cursor:pointer;padding:4px;line-height:1}
+
+/* ── MAIN ── */
+main{max-width:600px;margin:0 auto;padding:16px 14px calc(24px + var(--safe-bot));display:flex;flex-direction:column;gap:16px}
+
+/* ── CARD ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.card-head{background:var(--bg3);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;color:var(--ciano);letter-spacing:.08em;text-transform:uppercase}
+.card-head svg{width:14px;height:14px;flex-shrink:0}
+.card-body{padding:14px}
+
+/* ── SELECTS ── */
+.field{display:flex;flex-direction:column;gap:6px}
+.field+.field{margin-top:12px}
+.field label{font-size:11px;font-weight:700;color:var(--cinza);text-transform:uppercase;letter-spacing:.07em}
+select{
+  width:100%;background:var(--bg4);color:var(--branco);
+  border:1px solid var(--border2);border-radius:var(--r);
+  padding:13px 40px 13px 14px;font-size:15px;font-family:var(--fonte-ui);
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238ba3bf' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  cursor:pointer;
+}
+select:focus{outline:2px solid var(--azul);outline-offset:2px}
+select:disabled{opacity:.45}
+
+/* ── ALERTAS ── */
+.alerta{border-radius:var(--r);padding:12px 14px;font-size:13px;line-height:1.5;display:none;gap:10px;align-items:flex-start}
+.alerta.show{display:flex}
+.alerta.warn{background:#2d1a00;border:1px solid var(--laranja);color:#ffd09a}
+.alerta.info{background:#001e2d;border:1px solid var(--ciano);color:#9ee8fa}
+.alerta-icon{font-size:20px;flex-shrink:0;line-height:1.2}
+.alerta strong{color:var(--branco)}
+
+/* ── RESULTADOS ── */
+#resultados{display:none}
+#resultados.show{display:flex;flex-direction:column;gap:14px}
+
+/* ── BLOCO VISUAL ── */
+.bloco-visual{display:flex;flex-direction:column;gap:12px}
+.diagrama-wrap{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.diagrama-wrap svg{width:100%;max-width:280px;height:auto;display:block}
+.diagrama-titulo{font-size:10px;font-weight:700;color:var(--cinza2);text-transform:uppercase;letter-spacing:.07em;text-align:center}
+
+/* ── GRID DADOS ── */
+.dados-grid{display:grid;gap:10px}
+.dados-grid.col2{grid-template-columns:1fr 1fr}
+.dados-grid.col3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:400px){
+  .dados-grid.col2{grid-template-columns:1fr}
+  .dados-grid.col3{grid-template-columns:1fr 1fr}
+}
+
+.dado{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;display:flex;flex-direction:column;gap:4px}
+.dado-label{font-size:10px;font-weight:700;color:var(--cinza2);text-transform:uppercase;letter-spacing:.07em}
+.dado-valor{font-family:var(--fonte-mono);font-size:22px;font-weight:700;line-height:1.1}
+.dado-valor .unid{font-size:12px;font-weight:400;color:var(--cinza);margin-left:2px}
+.dado-sub{font-size:11px;color:var(--cinza);margin-top:2px}
+.dado.azul{border-left:3px solid var(--azul2)}.dado.verde{border-left:3px solid var(--verde)}
+.dado.amar{border-left:3px solid var(--amarelo)}.dado.ciano{border-left:3px solid var(--ciano)}
+.dado.azul .dado-label{color:var(--azul2)}.dado.verde .dado-label{color:var(--verde)}
+.dado.amar .dado-label{color:var(--amarelo)}.dado.ciano .dado-label{color:var(--ciano)}
+.dado.azul .dado-valor{color:#a8d4ff}.dado.verde .dado-valor{color:#86efac}
+.dado.amar .dado-valor{color:#fde68a}.dado.ciano .dado-valor{color:#67e8f9}
+
+.nota-box{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:11px 13px;font-size:12px;color:var(--cinza);line-height:1.5}
+.nota-box strong{color:var(--verde)}
+.nota-box.amar strong{color:var(--amarelo)}
+
+.norma-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px 14px;background:var(--bg4);border-top:1px solid var(--border);font-size:11px;color:var(--cinza)}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase}
+.tag-azul{background:var(--azul-dim);color:var(--ciano);border:1px solid var(--azul)}
+
+/* ── PLACEHOLDER ── */
+.placeholder{text-align:center;padding:36px 16px;color:var(--cinza2)}
+.placeholder svg{width:48px;height:48px;opacity:.2;margin:0 auto 14px;display:block}
+.placeholder p{font-size:13px;line-height:1.6}
+
+/* ── OFFLINE BADGE ── */
+#offline-badge{display:none;position:fixed;top:calc(68px + var(--safe-top));right:12px;background:#2d1a00;border:1px solid var(--laranja);border-radius:20px;padding:4px 10px;font-size:11px;color:#ffd09a;z-index:100}
+#offline-badge.show{display:block}
+
+footer{text-align:center;padding:16px;font-size:10px;color:var(--cinza2);border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div id="offline-badge">📵 Offline</div>
+
+<!-- BANNER INSTALAR APP -->
+<div id="banner-instalar">
+  <div style="font-size:22px">⚙️</div>
+  <p>Instalar como app no celular
+    <span>Funciona offline, sem internet</span>
+  </p>
+  <button class="btn-instalar" id="btn-instalar-ok">Instalar</button>
+  <button class="btn-fechar" id="btn-instalar-nao" aria-label="Fechar">×</button>
+</div>
+
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.36.07-.74.07-1.08s-.03-.73-.07-1.08l2.32-1.82c.21-.16.27-.46.13-.7l-2.2-3.82c-.13-.24-.42-.32-.66-.24l-2.73 1.1c-.57-.44-1.18-.8-1.86-1.08L14.8 2.42A.54.54 0 0 0 14.26 2H9.74c-.26 0-.49.18-.53.42L8.86 5.36c-.68.28-1.29.64-1.86 1.08L4.27 5.34c-.24-.09-.53 0-.66.24L1.41 9.4c-.14.24-.08.54.13.7l2.32 1.82C3.82 12.27 3.79 12.64 3.79 13s.03.72.07 1.08L1.54 15.9c-.21.16-.27.46-.13.7l2.2 3.82c.13.24.42.32.66.24l2.73-1.1c.57.44 1.18.8 1.86 1.08l.35 2.94c.04.24.27.42.53.42h4.52c.26 0 .49-.18.53-.42l.35-2.94c.68-.28 1.29-.64 1.86-1.08l2.73 1.1c.24.09.53 0 .66-.24l2.2-3.82c.14-.24.08-.54-.13-.7l-2.32-1.82z"/></svg>
+  </div>
+  <div>
+    <h1>Consulta de Roscas</h1>
+    <p>Macho · Torno · Chão de Fábrica</p>
+  </div>
+</header>
+
+<main>
+
+<!-- SELEÇÃO -->
+<div class="card">
+  <div class="card-head">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Seleção
+  </div>
+  <div class="card-body">
+    <div class="field">
+      <label for="sel-tipo">Tipo de rosca</label>
+      <select id="sel-tipo" onchange="atualizarBitolas()">
+        <option value="">— selecione —</option>
+        <option value="M">Métrica Grossa (M)</option>
+        <option value="MF">Métrica Fina (MF)</option>
+        <option value="UNC">Americana Grossa (UNC)</option>
+        <option value="UNF">Americana Fina (UNF)</option>
+        <option value="BSW">Britânica Grossa (BSW)</option>
+        <option value="BSP">Tubulação Britânica (BSP / G)</option>
+        <option value="NPT">Tubulação Cônica Amer. (NPT)</option>
+        <option value="NPS">Tubulação Paralela Amer. (NPS)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="sel-bitola">Bitola / medida nominal</label>
+      <select id="sel-bitola" onchange="mostrarResultado()" disabled>
+        <option value="">— selecione o tipo primeiro —</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTAS -->
+<div id="alerta-npt" class="alerta warn">
+  <span class="alerta-icon">⚠️</span>
+  <div><strong>Rosca cônica (NPT)</strong><br>No torno exige inclinação do carro a <strong>1° 47'</strong> (conicidade 1:16).</div>
+</div>
+<div id="alerta-bsp" class="alerta info">
+  <span class="alerta-icon">ℹ️</span>
+  <div><strong>Rosca paralela para tubos</strong><br>Exige vedação extra: anel, junta ou fita PTFE na face.</div>
+</div>
+
+<!-- RESULTADO -->
+<div id="area-resultado">
+  <div class="card" id="card-placeholder">
+    <div class="placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      <p>Selecione o tipo de rosca<br>e a bitola para ver os parâmetros</p>
+    </div>
+  </div>
+
+  <div id="resultados">
+
+    <!-- DADOS GERAIS -->
+    <div class="card">
+      <div class="card-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Dados Gerais
+      </div>
+      <div class="card-body bloco-visual">
+        <div class="diagrama-wrap">
+          <div class="diagrama-titulo">Perfil do filete — vista lateral</div>
+          <svg id="svg-perfil" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="dados-grid col3">
+          <div class="dado azul">
+            <span class="dado-label">Passo / FPP</span>
+            <span class="dado-valor" id="r-passo">—</span>
+            <span class="dado-sub" id="r-passo-sub"></span>
+          </div>
+          <div class="dado ciano">
+            <span class="dado-label">Ângulo</span>
+            <span class="dado-valor" id="r-angulo">—</span>
+            <span class="dado-sub" id="r-angulo-tipo"></span>
+          </div>
+          <div class="dado amar">
+            <span class="dado-label">Prof. h</span>
+            <span class="dado-valor" id="r-h">—<span class="unid">mm</span></span>
+            <span class="dado-sub">por lado</span>
+          </div>
+        </div>
+        <div class="diagrama-wrap">
+          <div class="diagrama-titulo">Corte transversal — diâmetros</div>
+          <svg id="svg-corte" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="dados-grid col2">
+          <div class="dado azul">
+            <span class="dado-label">⌀ Externo — Crista (D)</span>
+            <span class="dado-valor" id="r-dext">—<span class="unid">mm</span></span>
+            <span class="dado-sub">diâm. máximo</span>
+          </div>
+          <div class="dado ciano">
+            <span class="dado-label">⌀ Núcleo — Raiz (d₁)</span>
+            <span class="dado-valor" id="r-dnucleo">—<span class="unid">mm</span></span>
+            <span class="dado-sub">d₁ = D − 2h</span>
+          </div>
+        </div>
+      </div>
+      <div class="norma-row" id="r-norma-row"></div>
+    </div>
+
+    <!-- MÉTODO 1 -->
+    <div class="card">
+      <div class="card-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2.5c0 1.5-1.5 7-1.5 7h-2S9.5 4 9.5 2.5a2.5 2.5 0 0 1 5 0z"/><path d="M11 9.5V22M9 22h4"/></svg>
+        Método 1 — Macho de Roscar
+      </div>
+      <div class="card-body bloco-visual">
+        <div class="diagrama-wrap">
+          <div class="diagrama-titulo">Furo para macho</div>
+          <svg id="svg-macho" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="dados-grid col2">
+          <div class="dado verde">
+            <span class="dado-label">⌀ Broca — Corte</span>
+            <span class="dado-valor" id="r-broca-corte">—<span class="unid">mm</span></span>
+            <span class="dado-sub">macho de corte</span>
+          </div>
+          <div class="dado verde">
+            <span class="dado-label">⌀ Broca — Laminador</span>
+            <span class="dado-valor" id="r-broca-lam">—<span class="unid">mm</span></span>
+            <span class="dado-sub">D − P/2</span>
+          </div>
+        </div>
+        <div class="nota-box">
+          <strong>Procedimento:</strong> furar → fluido de corte → roscar. Para aços &gt;40 HRC prefira laminador.
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTODO 2 -->
+    <div class="card">
+      <div class="card-head">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M6 8V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2M6 16v2a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2"/></svg>
+        Método 2 — Torno Mecânico
+      </div>
+      <div class="card-body bloco-visual">
+        <div class="diagrama-wrap">
+          <div class="diagrama-titulo">Rosca interna / Rosca externa</div>
+          <svg id="svg-torno" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="dados-grid col2">
+          <div class="dado amar">
+            <span class="dado-label">Rosca Interna — Furo</span>
+            <span class="dado-valor" id="r-torno-furo">—<span class="unid">mm</span></span>
+            <span class="dado-sub">tornear antes de roscar</span>
+          </div>
+          <div class="dado amar">
+            <span class="dado-label">Rosca Externa — Eixo</span>
+            <span class="dado-valor" id="r-torno-eixo">—<span class="unid">mm</span></span>
+            <span class="dado-sub">tornear o tarugo</span>
+          </div>
+        </div>
+        <div class="nota-box amar">
+          <strong>Config.:</strong> Norton conforme passo · ferramenta <span id="r-angulo-torno">—</span> · verificar com pente.<span id="r-obs-torno" style="color:var(--laranja);font-weight:700"></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</main>
+<footer>DIN 13 · ISO 724 · NBR 14745 · ASME B1.1 · BS 84 · ISO 228 · ASME B1.20.1</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// REGISTRO DO SERVICE WORKER
+// ═══════════════════════════════════════════
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(()=>console.log('SW registrado'))
+      .catch(e=>console.log('SW erro:',e));
+  });
+}
+
+// ── Offline badge ──
+window.addEventListener('online', ()=>document.getElementById('offline-badge').classList.remove('show'));
+window.addEventListener('offline',()=>document.getElementById('offline-badge').classList.add('show'));
+if(!navigator.onLine) document.getElementById('offline-badge').classList.add('show');
+
+// ── Banner de instalação ──
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById('banner-instalar').classList.add('show');
+});
+document.getElementById('btn-instalar-ok').addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  const{outcome}=await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById('banner-instalar').classList.remove('show');
+});
+document.getElementById('btn-instalar-nao').addEventListener('click',()=>{
+  document.getElementById('banner-instalar').classList.remove('show');
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('banner-instalar').classList.remove('show');
+});
+
+// ═══════════════════════════════════════════
+// BANCO DE DADOS
+// ═══════════════════════════════════════════
+const DB={
+M:[
+  {label:'M3 × 0,50',  passo_mm:0.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.31,d_ext:3.00, d_nucleo:2.46, broca_corte:2.50, broca_lam:2.75, torno_furo:2.46, torno_eixo:3.00, norma:'DIN 13 / ISO 724'},
+  {label:'M4 × 0,70',  passo_mm:0.70,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.43,d_ext:4.00, d_nucleo:3.24, broca_corte:3.30, broca_lam:3.65, torno_furo:3.24, torno_eixo:4.00, norma:'DIN 13 / ISO 724'},
+  {label:'M5 × 0,80',  passo_mm:0.80,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.49,d_ext:5.00, d_nucleo:4.13, broca_corte:4.20, broca_lam:4.60, torno_furo:4.13, torno_eixo:5.00, norma:'DIN 13 / ISO 724'},
+  {label:'M6 × 1,00',  passo_mm:1.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.61,d_ext:6.00, d_nucleo:4.92, broca_corte:5.00, broca_lam:5.50, torno_furo:4.92, torno_eixo:6.00, norma:'DIN 13 / ISO 724'},
+  {label:'M8 × 1,25',  passo_mm:1.25,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.77,d_ext:8.00, d_nucleo:6.65, broca_corte:6.80, broca_lam:7.38, torno_furo:6.65, torno_eixo:8.00, norma:'DIN 13 / ISO 724'},
+  {label:'M10 × 1,50', passo_mm:1.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.92,d_ext:10.00,d_nucleo:8.38, broca_corte:8.50, broca_lam:9.25, torno_furo:8.38, torno_eixo:10.00,norma:'DIN 13 / ISO 724'},
+  {label:'M12 × 1,75', passo_mm:1.75,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.07,d_ext:12.00,d_nucleo:10.11,broca_corte:10.20,broca_lam:11.13,torno_furo:10.10,torno_eixo:12.00,norma:'DIN 13 / ISO 724'},
+  {label:'M14 × 2,00', passo_mm:2.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.23,d_ext:14.00,d_nucleo:11.84,broca_corte:12.00,broca_lam:13.00,torno_furo:11.84,torno_eixo:14.00,norma:'DIN 13 / ISO 724'},
+  {label:'M16 × 2,00', passo_mm:2.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.23,d_ext:16.00,d_nucleo:13.84,broca_corte:14.00,broca_lam:15.00,torno_furo:13.84,torno_eixo:16.00,norma:'DIN 13 / ISO 724'},
+  {label:'M20 × 2,50', passo_mm:2.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.53,d_ext:20.00,d_nucleo:17.29,broca_corte:17.50,broca_lam:18.75,torno_furo:17.30,torno_eixo:20.00,norma:'DIN 13 / ISO 724'},
+  {label:'M24 × 3,00', passo_mm:3.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.84,d_ext:24.00,d_nucleo:20.75,broca_corte:21.00,broca_lam:22.50,torno_furo:20.75,torno_eixo:24.00,norma:'DIN 13 / ISO 724'},
+  {label:'M27 × 3,00', passo_mm:3.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.84,d_ext:27.00,d_nucleo:23.75,broca_corte:24.00,broca_lam:25.50,torno_furo:23.75,torno_eixo:27.00,norma:'DIN 13 / ISO 724'},
+  {label:'M30 × 3,50', passo_mm:3.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:2.15,d_ext:30.00,d_nucleo:26.21,broca_corte:26.50,broca_lam:28.25,torno_furo:26.21,torno_eixo:30.00,norma:'DIN 13 / ISO 724'},
+  {label:'M36 × 4,00', passo_mm:4.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:2.45,d_ext:36.00,d_nucleo:31.67,broca_corte:32.00,broca_lam:34.00,torno_furo:31.67,torno_eixo:36.00,norma:'DIN 13 / ISO 724'},
+  {label:'M42 × 4,50', passo_mm:4.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:2.76,d_ext:42.00,d_nucleo:37.13,broca_corte:37.50,broca_lam:39.75,torno_furo:37.13,torno_eixo:42.00,norma:'DIN 13 / ISO 724'},
+  {label:'M48 × 5,00', passo_mm:5.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:3.07,d_ext:48.00,d_nucleo:42.59,broca_corte:43.00,broca_lam:45.50,torno_furo:42.59,torno_eixo:48.00,norma:'DIN 13 / ISO 724'},
+  {label:'M52 × 5,00', passo_mm:5.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:3.07,d_ext:52.00,d_nucleo:46.59,broca_corte:47.00,broca_lam:49.50,torno_furo:46.59,torno_eixo:52.00,norma:'DIN 13 / ISO 724'},
+],
+MF:[
+  {label:'M8 × 1,00',  passo_mm:1.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.61,d_ext:8.00, d_nucleo:6.92, broca_corte:7.00, broca_lam:7.50, torno_furo:6.90, torno_eixo:8.00, norma:'DIN 13 / ISO 724'},
+  {label:'M10 × 1,00', passo_mm:1.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.61,d_ext:10.00,d_nucleo:8.92, broca_corte:9.00, broca_lam:9.50, torno_furo:8.90, torno_eixo:10.00,norma:'DIN 13 / ISO 724'},
+  {label:'M10 × 1,25', passo_mm:1.25,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.77,d_ext:10.00,d_nucleo:8.65, broca_corte:8.75, broca_lam:9.38, torno_furo:8.65, torno_eixo:10.00,norma:'DIN 13 / ISO 724'},
+  {label:'M12 × 1,50', passo_mm:1.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.92,d_ext:12.00,d_nucleo:10.38,broca_corte:10.50,broca_lam:11.25,torno_furo:10.38,torno_eixo:12.00,norma:'DIN 13 / ISO 724'},
+  {label:'M16 × 1,50', passo_mm:1.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.92,d_ext:16.00,d_nucleo:14.38,broca_corte:14.50,broca_lam:15.25,torno_furo:14.38,torno_eixo:16.00,norma:'DIN 13 / ISO 724'},
+  {label:'M20 × 1,50', passo_mm:1.50,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.92,d_ext:20.00,d_nucleo:18.38,broca_corte:18.50,broca_lam:19.25,torno_furo:18.38,torno_eixo:20.00,norma:'DIN 13 / ISO 724'},
+  {label:'M24 × 2,00', passo_mm:2.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.23,d_ext:24.00,d_nucleo:21.84,broca_corte:22.00,broca_lam:23.00,torno_furo:21.84,torno_eixo:24.00,norma:'DIN 13 / ISO 724'},
+  {label:'M30 × 2,00', passo_mm:2.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.23,d_ext:30.00,d_nucleo:27.84,broca_corte:28.00,broca_lam:29.00,torno_furo:27.84,torno_eixo:30.00,norma:'DIN 13 / ISO 724'},
+  {label:'M36 × 3,00', passo_mm:3.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.84,d_ext:36.00,d_nucleo:32.75,broca_corte:33.00,broca_lam:34.50,torno_furo:32.75,torno_eixo:36.00,norma:'DIN 13 / ISO 724'},
+  {label:'M42 × 3,00', passo_mm:3.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.84,d_ext:42.00,d_nucleo:38.75,broca_corte:39.00,broca_lam:40.50,torno_furo:38.75,torno_eixo:42.00,norma:'DIN 13 / ISO 724'},
+  {label:'M52 × 3,00', passo_mm:3.00,fpp:null,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.84,d_ext:52.00,d_nucleo:48.75,broca_corte:49.00,broca_lam:50.50,torno_furo:48.75,torno_eixo:52.00,norma:'DIN 13 / ISO 724'},
+],
+UNC:[
+  {label:'1/4"-20',   passo_mm:1.270,fpp:20,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.78,d_ext:6.35, d_nucleo:4.98, broca_corte:5.10, broca_lam:5.72, torno_furo:4.90, torno_eixo:6.35, norma:'ASME B1.1'},
+  {label:'5/16"-18',  passo_mm:1.411,fpp:18,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.87,d_ext:7.94, d_nucleo:6.41, broca_corte:6.60, broca_lam:7.23, torno_furo:6.40, torno_eixo:7.94, norma:'ASME B1.1'},
+  {label:'3/8"-16',   passo_mm:1.588,fpp:16,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.97,d_ext:9.53, d_nucleo:7.81, broca_corte:8.00, broca_lam:8.74, torno_furo:7.80, torno_eixo:9.52, norma:'ASME B1.1'},
+  {label:'1/2"-13',   passo_mm:1.954,fpp:13,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.20,d_ext:12.70,d_nucleo:10.58,broca_corte:10.80,broca_lam:11.73,torno_furo:10.50,torno_eixo:12.70,norma:'ASME B1.1'},
+  {label:'5/8"-11',   passo_mm:2.309,fpp:11,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.42,d_ext:15.88,d_nucleo:13.38,broca_corte:13.50,broca_lam:14.73,torno_furo:13.20,torno_eixo:15.87,norma:'ASME B1.1'},
+  {label:'3/4"-10',   passo_mm:2.540,fpp:10,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.56,d_ext:19.05,d_nucleo:16.28,broca_corte:16.50,broca_lam:17.78,torno_furo:16.20,torno_eixo:19.05,norma:'ASME B1.1'},
+  {label:'1"-8',      passo_mm:3.175,fpp:8,   angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.95,d_ext:25.40,d_nucleo:21.98,broca_corte:22.25,broca_lam:23.81,torno_furo:21.80,torno_eixo:25.40,norma:'ASME B1.1'},
+  {label:'1.1/4"-7',  passo_mm:3.629,fpp:7,   angulo:'60°',tipo_filete:'Agudo/topo plano',h:2.23,d_ext:31.75,d_nucleo:27.78,broca_corte:28.25,broca_lam:29.96,torno_furo:27.80,torno_eixo:31.75,norma:'ASME B1.1'},
+  {label:'1.1/2"-6',  passo_mm:4.233,fpp:6,   angulo:'60°',tipo_filete:'Agudo/topo plano',h:2.60,d_ext:38.10,d_nucleo:33.38,broca_corte:34.00,broca_lam:35.55,torno_furo:33.50,torno_eixo:38.10,norma:'ASME B1.1'},
+  {label:'2"-4.1/2',  passo_mm:5.644,fpp:4.5, angulo:'60°',tipo_filete:'Agudo/topo plano',h:3.47,d_ext:50.80,d_nucleo:44.27,broca_corte:45.20,broca_lam:47.98,torno_furo:44.70,torno_eixo:50.80,norma:'ASME B1.1'},
+],
+UNF:[
+  {label:'1/4"-28',   passo_mm:0.907,fpp:28,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.56,d_ext:6.35, d_nucleo:5.49, broca_corte:5.50, broca_lam:5.90, torno_furo:5.30, torno_eixo:6.35, norma:'ASME B1.1'},
+  {label:'5/16"-24',  passo_mm:1.058,fpp:24,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.65,d_ext:7.94, d_nucleo:6.90, broca_corte:6.90, broca_lam:7.41, torno_furo:6.70, torno_eixo:7.94, norma:'ASME B1.1'},
+  {label:'3/8"-24',   passo_mm:1.058,fpp:24,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.65,d_ext:9.53, d_nucleo:8.48, broca_corte:8.50, broca_lam:9.00, torno_furo:8.30, torno_eixo:9.52, norma:'ASME B1.1'},
+  {label:'1/2"-20',   passo_mm:1.270,fpp:20,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.78,d_ext:12.70,d_nucleo:11.51,broca_corte:11.50,broca_lam:12.07,torno_furo:11.30,torno_eixo:12.70,norma:'ASME B1.1'},
+  {label:'3/4"-16',   passo_mm:1.588,fpp:16,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.97,d_ext:19.05,d_nucleo:17.46,broca_corte:17.50,broca_lam:18.26,torno_furo:17.30,torno_eixo:19.05,norma:'ASME B1.1'},
+  {label:'1"-12',     passo_mm:2.117,fpp:12,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.30,d_ext:25.40,d_nucleo:23.37,broca_corte:23.25,broca_lam:24.35,torno_furo:23.00,torno_eixo:25.40,norma:'ASME B1.1'},
+  {label:'1.1/2"-12', passo_mm:2.117,fpp:12,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.30,d_ext:38.10,d_nucleo:36.07,broca_corte:35.80,broca_lam:37.04,torno_furo:35.50,torno_eixo:38.10,norma:'ASME B1.1'},
+],
+BSW:[
+  {label:'1/4"-20',   passo_mm:1.270,fpp:20,  angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:0.81,d_ext:6.35, d_nucleo:4.75, broca_corte:5.10, broca_lam:5.72, torno_furo:4.75, torno_eixo:6.35, norma:'BS 84 / DIN 11'},
+  {label:'3/8"-16',   passo_mm:1.588,fpp:16,  angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.02,d_ext:9.53, d_nucleo:7.50, broca_corte:7.90, broca_lam:8.74, torno_furo:7.50, torno_eixo:9.52, norma:'BS 84 / DIN 11'},
+  {label:'1/2"-12',   passo_mm:2.117,fpp:12,  angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.36,d_ext:12.70,d_nucleo:10.00,broca_corte:10.50,broca_lam:11.59,torno_furo:10.00,torno_eixo:12.70,norma:'BS 84 / DIN 11'},
+  {label:'3/4"-10',   passo_mm:2.540,fpp:10,  angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.63,d_ext:19.05,d_nucleo:15.90,broca_corte:16.50,broca_lam:17.78,torno_furo:15.90,torno_eixo:19.05,norma:'BS 84 / DIN 11'},
+  {label:'1"-8',      passo_mm:3.175,fpp:8,   angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:2.03,d_ext:25.40,d_nucleo:21.30,broca_corte:22.00,broca_lam:23.81,torno_furo:21.30,torno_eixo:25.40,norma:'BS 84 / DIN 11'},
+  {label:'1.1/2"-6',  passo_mm:4.233,fpp:6,   angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:2.71,d_ext:38.10,d_nucleo:32.70,broca_corte:33.50,broca_lam:36.03,torno_furo:32.70,torno_eixo:38.10,norma:'BS 84 / DIN 11'},
+  {label:'2"-4.1/2',  passo_mm:5.644,fpp:4.5, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:3.61,d_ext:50.80,d_nucleo:43.50,broca_corte:44.50,broca_lam:47.98,torno_furo:43.50,torno_eixo:50.80,norma:'BS 84 / DIN 11'},
+],
+BSP:[
+  {label:'G 1/8"-28',   passo_mm:0.907,fpp:28, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:0.58,d_ext:9.73, d_nucleo:8.57, broca_corte:8.80, broca_lam:9.27, torno_furo:8.57, torno_eixo:9.73, norma:'ISO 228 / DIN 259'},
+  {label:'G 1/4"-19',   passo_mm:1.337,fpp:19, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:0.86,d_ext:13.16,d_nucleo:11.45,broca_corte:11.80,broca_lam:12.49,torno_furo:11.45,torno_eixo:13.16,norma:'ISO 228 / DIN 259'},
+  {label:'G 3/8"-19',   passo_mm:1.337,fpp:19, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:0.86,d_ext:16.66,d_nucleo:14.95,broca_corte:15.30,broca_lam:15.99,torno_furo:14.95,torno_eixo:16.66,norma:'ISO 228 / DIN 259'},
+  {label:'G 1/2"-14',   passo_mm:1.814,fpp:14, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.16,d_ext:20.96,d_nucleo:18.63,broca_corte:19.00,broca_lam:20.05,torno_furo:18.63,torno_eixo:20.96,norma:'ISO 228 / DIN 259'},
+  {label:'G 3/4"-14',   passo_mm:1.814,fpp:14, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.16,d_ext:26.44,d_nucleo:24.12,broca_corte:24.50,broca_lam:25.53,torno_furo:24.12,torno_eixo:26.44,norma:'ISO 228 / DIN 259'},
+  {label:'G 1"-11',     passo_mm:2.309,fpp:11, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.48,d_ext:33.25,d_nucleo:30.29,broca_corte:30.80,broca_lam:32.10,torno_furo:30.29,torno_eixo:33.25,norma:'ISO 228 / DIN 259'},
+  {label:'G 1.1/2"-11', passo_mm:2.309,fpp:11, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.48,d_ext:47.80,d_nucleo:44.85,broca_corte:45.00,broca_lam:46.65,torno_furo:44.85,torno_eixo:47.80,norma:'ISO 228 / DIN 259'},
+  {label:'G 2"-11',     passo_mm:2.309,fpp:11, angulo:'55°',tipo_filete:'Arredondado (Whitworth)',h:1.48,d_ext:59.61,d_nucleo:56.66,broca_corte:57.00,broca_lam:58.46,torno_furo:56.66,torno_eixo:59.61,norma:'ISO 228 / DIN 259'},
+],
+NPT:[
+  {label:'1/8"-27',     passo_mm:0.941,fpp:27,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.75,d_ext:10.24,d_nucleo:8.40, broca_corte:8.50, broca_lam:9.77, torno_furo:8.40, torno_eixo:10.24,norma:'ASME B1.20.1'},
+  {label:'1/4"-18',     passo_mm:1.411,fpp:18,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.13,d_ext:13.61,d_nucleo:10.90,broca_corte:11.00,broca_lam:12.91,torno_furo:10.90,torno_eixo:13.61,norma:'ASME B1.20.1'},
+  {label:'3/8"-18',     passo_mm:1.411,fpp:18,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.13,d_ext:17.05,d_nucleo:14.40,broca_corte:14.50,broca_lam:16.35,torno_furo:14.40,torno_eixo:17.05,norma:'ASME B1.20.1'},
+  {label:'1/2"-14',     passo_mm:1.814,fpp:14,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.45,d_ext:21.22,d_nucleo:17.70,broca_corte:17.80,broca_lam:20.31,torno_furo:17.70,torno_eixo:21.22,norma:'ASME B1.20.1'},
+  {label:'3/4"-14',     passo_mm:1.814,fpp:14,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.45,d_ext:26.57,d_nucleo:23.00,broca_corte:23.20,broca_lam:25.66,torno_furo:23.00,torno_eixo:26.57,norma:'ASME B1.20.1'},
+  {label:'1"-11.5',     passo_mm:2.209,fpp:11.5,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.77,d_ext:33.23,d_nucleo:28.90,broca_corte:29.00,broca_lam:32.13,torno_furo:28.90,torno_eixo:33.23,norma:'ASME B1.20.1'},
+  {label:'1.1/2"-11.5', passo_mm:2.209,fpp:11.5,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.77,d_ext:48.05,d_nucleo:43.40,broca_corte:43.50,broca_lam:47.95,torno_furo:43.40,torno_eixo:48.05,norma:'ASME B1.20.1'},
+  {label:'2"-11.5',     passo_mm:2.209,fpp:11.5,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.77,d_ext:60.09,d_nucleo:55.40,broca_corte:55.50,broca_lam:59.99,torno_furo:55.40,torno_eixo:60.09,norma:'ASME B1.20.1'},
+],
+NPS:[
+  {label:'1/8"-27',     passo_mm:0.941,fpp:27,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:0.75,d_ext:10.24,d_nucleo:8.95, broca_corte:9.10, broca_lam:9.77, torno_furo:8.95, torno_eixo:10.24,norma:'ANSI B1.20.1'},
+  {label:'1/4"-18',     passo_mm:1.411,fpp:18,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.13,d_ext:13.61,d_nucleo:11.90,broca_corte:12.00,broca_lam:12.91,torno_furo:11.90,torno_eixo:13.61,norma:'ANSI B1.20.1'},
+  {label:'1/2"-14',     passo_mm:1.814,fpp:14,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.45,d_ext:21.22,d_nucleo:18.80,broca_corte:19.00,broca_lam:20.31,torno_furo:18.80,torno_eixo:21.22,norma:'ANSI B1.20.1'},
+  {label:'3/4"-14',     passo_mm:1.814,fpp:14,  angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.45,d_ext:26.57,d_nucleo:24.20,broca_corte:24.50,broca_lam:25.66,torno_furo:24.20,torno_eixo:26.57,norma:'ANSI B1.20.1'},
+  {label:'1"-11.5',     passo_mm:2.209,fpp:11.5,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.77,d_ext:33.23,d_nucleo:30.20,broca_corte:30.50,broca_lam:32.13,torno_furo:30.20,torno_eixo:33.23,norma:'ANSI B1.20.1'},
+  {label:'2"-11.5',     passo_mm:2.209,fpp:11.5,angulo:'60°',tipo_filete:'Agudo/topo plano',h:1.77,d_ext:60.09,d_nucleo:57.10,broca_corte:57.50,broca_lam:59.99,torno_furo:57.10,torno_eixo:60.09,norma:'ANSI B1.20.1'},
+],
+};
+
+// ═══════════════════════════════════════════
+// DIAGRAMAS SVG
+// ═══════════════════════════════════════════
+const C={az:'#2585f0',ci:'#00c4e8',ve:'#22c55e',am:'#f5c842',
+         la:'#f97316',cz:'#4a6680',cb:'#8ba3bf',br:'#f0f6ff',
+         bg3:'#1a2436',bg4:'#0e1929'};
+
+function svgPerfil(tipo,d_ext,d_nucleo){
+  const arred=(tipo==='BSW'||tipo==='BSP');
+  const cx=100,p=40,n=4,y0=22;
+  const cl=40,cr=160,rl=64,rr=136;
+  let s='';
+  s+=`<line x1="${cx}" y1="8" x2="${cx}" y2="195" stroke="${C.cz}" stroke-width="0.8" stroke-dasharray="5 3"/>`;
+  for(let i=0;i<n;i++){
+    const yb=y0+i*p,ym=yb+p/2,yt=yb+p;
+    if(arred){
+      s+=`<path d="M${cl},${ym} Q${rl-8},${yb} ${rl},${yb} L${rl},${yt} Q${rl-8},${yt} ${cl},${ym}Z" fill="${C.bg3}" stroke="${C.az}" stroke-width="1.2"/>`;
+      s+=`<path d="M${cr},${ym} Q${rr+8},${yb} ${rr},${yb} L${rr},${yt} Q${rr+8},${yt} ${cr},${ym}Z" fill="${C.bg3}" stroke="${C.az}" stroke-width="1.2"/>`;
+    } else {
+      s+=`<polygon points="${cl},${ym} ${rl},${yb} ${rl},${yt}" fill="${C.bg3}" stroke="${C.az}" stroke-width="1.2"/>`;
+      s+=`<polygon points="${cr},${ym} ${rr},${yb} ${rr},${yt}" fill="${C.bg3}" stroke="${C.az}" stroke-width="1.2"/>`;
+    }
+  }
+  s+=`<line x1="${cl}" y1="${y0}" x2="${cl}" y2="${y0+p*n}" stroke="${C.az}" stroke-width="2"/>`;
+  s+=`<line x1="${cr}" y1="${y0}" x2="${cr}" y2="${y0+p*n}" stroke="${C.az}" stroke-width="2"/>`;
+  s+=`<line x1="${rl}" y1="${y0}" x2="${rl}" y2="${y0+p*n}" stroke="${C.ci}" stroke-width="1" stroke-dasharray="4 2"/>`;
+  s+=`<line x1="${rr}" y1="${y0}" x2="${rr}" y2="${y0+p*n}" stroke="${C.ci}" stroke-width="1" stroke-dasharray="4 2"/>`;
+  s+=`<rect x="${rl}" y="${y0}" width="${rr-rl}" height="${p*n}" fill="${C.bg4}" stroke="none"/>`;
+  // cota D
+  const yc=y0+p*n+14;
+  s+=`<line x1="${cl}" y1="${yc}" x2="${cr}" y2="${yc}" stroke="${C.az}" stroke-width="1"/>`;
+  s+=`<polygon points="${cl},${yc} ${cl+6},${yc-3} ${cl+6},${yc+3}" fill="${C.az}"/>`;
+  s+=`<polygon points="${cr},${yc} ${cr-6},${yc-3} ${cr-6},${yc+3}" fill="${C.az}"/>`;
+  s+=`<text x="${cx}" y="${yc-3}" text-anchor="middle" fill="${C.az}" font-size="11" font-weight="bold">D</text>`;
+  // cota d1
+  const yd=y0-12;
+  s+=`<line x1="${rl}" y1="${yd}" x2="${rr}" y2="${yd}" stroke="${C.ci}" stroke-width="1"/>`;
+  s+=`<polygon points="${rl},${yd} ${rl+6},${yd-3} ${rl+6},${yd+3}" fill="${C.ci}"/>`;
+  s+=`<polygon points="${rr},${yd} ${rr-6},${yd-3} ${rr-6},${yd+3}" fill="${C.ci}"/>`;
+  s+=`<text x="${cx}" y="${yd-3}" text-anchor="middle" fill="${C.ci}" font-size="11" font-weight="bold">d₁</text>`;
+  // cota h
+  s+=`<line x1="26" y1="${y0+p}" x2="26" y2="${y0+p*1.5}" stroke="${C.am}" stroke-width="1"/>`;
+  s+=`<polygon points="26,${y0+p} 23,${y0+p+5} 29,${y0+p+5}" fill="${C.am}"/>`;
+  s+=`<polygon points="26,${y0+p*1.5} 23,${y0+p*1.5-5} 29,${y0+p*1.5-5}" fill="${C.am}"/>`;
+  s+=`<text x="16" y="${y0+p*1.25+4}" fill="${C.am}" font-size="10" font-weight="bold">h</text>`;
+  // cota passo
+  s+=`<line x1="174" y1="${y0+p}" x2="174" y2="${y0+p*2}" stroke="${C.cb}" stroke-width="1"/>`;
+  s+=`<polygon points="174,${y0+p} 171,${y0+p+5} 177,${y0+p+5}" fill="${C.cb}"/>`;
+  s+=`<polygon points="174,${y0+p*2} 171,${y0+p*2-5} 177,${y0+p*2-5}" fill="${C.cb}"/>`;
+  s+=`<text x="183" y="${y0+p*1.5+4}" fill="${C.cb}" font-size="10" font-weight="bold">p</text>`;
+  // legenda
+  s+=`<text x="6" y="215" fill="${C.az}" font-size="8">─ D crista</text>`;
+  s+=`<text x="70" y="215" fill="${C.ci}" font-size="8">╌ d₁ raiz</text>`;
+  s+=`<text x="132" y="215" fill="${C.am}" font-size="8">↕ h prof.</text>`;
+  document.getElementById('svg-perfil').innerHTML=s;
+}
+
+function svgCorte(d_ext,d_nucleo){
+  const cx=100,cy=93,re=56,rn=re*(d_nucleo/d_ext);
+  let s='';
+  s+=`<circle cx="${cx}" cy="${cy}" r="${re+7}" fill="${C.bg3}" stroke="#1e3a5f" stroke-width="1"/>`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${re}" fill="${C.bg4}" stroke="${C.az}" stroke-width="2"/>`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${rn}" fill="none" stroke="${C.ci}" stroke-width="1.5" stroke-dasharray="6 3"/>`;
+  s+=`<line x1="${cx}" y1="${cy-re-9}" x2="${cx}" y2="${cy+re+9}" stroke="${C.cz}" stroke-width="0.7" stroke-dasharray="4 3"/>`;
+  s+=`<line x1="${cx-re-9}" y1="${cy}" x2="${cx+re+9}" y2="${cy}" stroke="${C.cz}" stroke-width="0.7" stroke-dasharray="4 3"/>`;
+  // seta D
+  s+=`<line x1="${cx}" y1="${cy}" x2="${cx+re}" y2="${cy}" stroke="${C.az}" stroke-width="1.5"/>`;
+  s+=`<polygon points="${cx+re},${cy} ${cx+re-6},${cy-3} ${cx+re-6},${cy+3}" fill="${C.az}"/>`;
+  s+=`<text x="${cx+re/2+2}" y="${cy-7}" fill="${C.az}" font-size="10" font-weight="bold" text-anchor="middle">D/2</text>`;
+  // seta d1
+  s+=`<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-rn}" stroke="${C.ci}" stroke-width="1.5"/>`;
+  s+=`<polygon points="${cx},${cy-rn} ${cx-3},${cy-rn+6} ${cx+3},${cy-rn+6}" fill="${C.ci}"/>`;
+  s+=`<text x="${cx+6}" y="${cy-rn/2+4}" fill="${C.ci}" font-size="10" font-weight="bold">d₁/2</text>`;
+  s+=`<text x="6" y="182" fill="${C.az}" font-size="8.5" font-weight="bold">⬤ D = diâm. externo (crista)</text>`;
+  s+=`<text x="6" y="196" fill="${C.ci}" font-size="8.5" font-weight="bold">◯ d₁ = diâm. núcleo (raiz)</text>`;
+  document.getElementById('svg-corte').innerHTML=s;
+}
+
+function svgMacho(broca,d_ext){
+  const cx=100,pr=Math.max(22,52*(broca/d_ext)),y0=28,ph=110;
+  let s='';
+  s+=`<rect x="18" y="${y0}" width="164" height="${ph+16}" rx="4" fill="${C.bg3}" stroke="#1e3a5f" stroke-width="1"/>`;
+  s+=`<rect x="${cx-pr}" y="${y0}" width="${2*pr}" height="${ph}" fill="${C.bg4}" stroke="none"/>`;
+  const ch=16;
+  s+=`<polygon points="${cx-pr},${y0+ph} ${cx+pr},${y0+ph} ${cx},${y0+ph+ch}" fill="${C.bg4}" stroke="none"/>`;
+  s+=`<line x1="${cx-pr}" y1="${y0}" x2="${cx-pr}" y2="${y0+ph}" stroke="${C.ve}" stroke-width="1.5"/>`;
+  s+=`<line x1="${cx+pr}" y1="${y0}" x2="${cx+pr}" y2="${y0+ph}" stroke="${C.ve}" stroke-width="1.5"/>`;
+  const yc=y0-13;
+  s+=`<line x1="${cx-pr}" y1="${yc}" x2="${cx+pr}" y2="${yc}" stroke="${C.ve}" stroke-width="1"/>`;
+  s+=`<polygon points="${cx-pr},${yc} ${cx-pr+6},${yc-3} ${cx-pr+6},${yc+3}" fill="${C.ve}"/>`;
+  s+=`<polygon points="${cx+pr},${yc} ${cx+pr-6},${yc-3} ${cx+pr-6},${yc+3}" fill="${C.ve}"/>`;
+  s+=`<text x="${cx}" y="${yc-4}" text-anchor="middle" fill="${C.ve}" font-size="10" font-weight="bold">Ø broca</text>`;
+  // macho
+  const mb=y0-40;
+  s+=`<rect x="${cx-7}" y="${mb}" width="14" height="36" rx="2" fill="${C.az}"/>`;
+  for(let i=0;i<5;i++) s+=`<line x1="${cx-11}" y1="${mb+5+i*6}" x2="${cx+11}" y2="${mb+5+i*6}" stroke="${C.br}" stroke-width="1.2"/>`;
+  s+=`<text x="${cx}" y="${mb-5}" text-anchor="middle" fill="${C.az}" font-size="9" font-weight="bold">MACHO</text>`;
+  s+=`<line x1="${cx}" y1="${mb+36}" x2="${cx}" y2="${y0-1}" stroke="${C.am}" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+  s+=`<polygon points="${cx},${y0} ${cx-3},${y0-6} ${cx+3},${y0-6}" fill="${C.am}"/>`;
+  s+=`<text x="${cx}" y="188" text-anchor="middle" fill="${C.ve}" font-size="8.5" font-weight="bold">Ø furo = D − P</text>`;
+  document.getElementById('svg-macho').innerHTML=s;
+}
+
+function svgTorno(tf,te,d_ext,tipo){
+  let s='';
+  // Interna (esquerda)
+  const lc=50,bx=8,ty=28,bh=118;
+  const rf=Math.max(8,(lc/2)*0.9*(tf/d_ext)*1.5);
+  s+=`<rect x="${bx}" y="${ty}" width="${lc}" height="${bh}" rx="3" fill="${C.bg3}" stroke="#1e3a5f" stroke-width="1"/>`;
+  s+=`<rect x="${bx+lc/2-rf}" y="${ty}" width="${2*rf}" height="${bh}" fill="${C.bg4}" stroke="none"/>`;
+  s+=`<line x1="${bx+lc/2-rf}" y1="${ty}" x2="${bx+lc/2-rf}" y2="${ty+bh}" stroke="${C.am}" stroke-width="1.5"/>`;
+  s+=`<line x1="${bx+lc/2+rf}" y1="${ty}" x2="${bx+lc/2+rf}" y2="${ty+bh}" stroke="${C.am}" stroke-width="1.5"/>`;
+  const yf=ty-12;
+  s+=`<line x1="${bx+lc/2-rf}" y1="${yf}" x2="${bx+lc/2+rf}" y2="${yf}" stroke="${C.am}" stroke-width="1"/>`;
+  s+=`<polygon points="${bx+lc/2-rf},${yf} ${bx+lc/2-rf+5},${yf-3} ${bx+lc/2-rf+5},${yf+3}" fill="${C.am}"/>`;
+  s+=`<polygon points="${bx+lc/2+rf},${yf} ${bx+lc/2+rf-5},${yf-3} ${bx+lc/2+rf-5},${yf+3}" fill="${C.am}"/>`;
+  s+=`<text x="${bx+lc/2}" y="${yf-5}" text-anchor="middle" fill="${C.am}" font-size="9" font-weight="bold">Ø furo</text>`;
+  s+=`<text x="${bx+lc/2}" y="${ty+bh+14}" text-anchor="middle" fill="${C.am}" font-size="8">Rosca interna</text>`;
+  // Divisória
+  s+=`<line x1="102" y1="18" x2="102" y2="168" stroke="${C.cz}" stroke-width="0.5" stroke-dasharray="4 3"/>`;
+  // Externa (direita)
+  const rc=155,er=Math.max(14,30*(te/d_ext)*1.0);
+  s+=`<rect x="${rc-er}" y="${ty}" width="${2*er}" height="${bh}" rx="3" fill="${C.bg3}" stroke="${C.az}" stroke-width="1.8"/>`;
+  for(let i=0;i<6;i++){
+    const yl=ty+8+i*17;
+    s+=`<line x1="${rc-er-5}" y1="${yl}" x2="${rc-er}" y2="${yl+9}" stroke="${C.az}" stroke-width="1.2"/>`;
+    s+=`<line x1="${rc+er}" y1="${yl}" x2="${rc+er+5}" y2="${yl+9}" stroke="${C.az}" stroke-width="1.2"/>`;
+  }
+  const ye=ty-12;
+  s+=`<line x1="${rc-er}" y1="${ye}" x2="${rc+er}" y2="${ye}" stroke="${C.az}" stroke-width="1"/>`;
+  s+=`<polygon points="${rc-er},${ye} ${rc-er+5},${ye-3} ${rc-er+5},${ye+3}" fill="${C.az}"/>`;
+  s+=`<polygon points="${rc+er},${ye} ${rc+er-5},${ye-3} ${rc+er-5},${ye+3}" fill="${C.az}"/>`;
+  s+=`<text x="${rc}" y="${ye-5}" text-anchor="middle" fill="${C.az}" font-size="9" font-weight="bold">Ø tarugo</text>`;
+  s+=`<text x="${rc}" y="${ty+bh+14}" text-anchor="middle" fill="${C.az}" font-size="8">Rosca externa</text>`;
+  if(tipo==='NPT'){
+    s+=`<line x1="${rc-er}" y1="${ty}" x2="${rc-er-10}" y2="${ty+bh}" stroke="${C.la}" stroke-width="1" stroke-dasharray="3 2"/>`;
+    s+=`<text x="${rc}" y="${ty+bh+28}" text-anchor="middle" fill="${C.la}" font-size="8" font-weight="bold">cônica 1:16 (1°47')</text>`;
+  }
+  s+=`<text x="102" y="190" text-anchor="middle" fill="${C.cz}" font-size="7.5">esquemático — fora de escala</text>`;
+  document.getElementById('svg-torno').innerHTML=s;
+}
+
+// ═══════════════════════════════════════════
+// INTERFACE
+// ═══════════════════════════════════════════
+function atualizarBitolas(){
+  const tipo=document.getElementById('sel-tipo').value;
+  const sel=document.getElementById('sel-bitola');
+  sel.innerHTML='';sel.disabled=!tipo;
+  document.getElementById('resultados').classList.remove('show');
+  document.getElementById('card-placeholder').style.display='block';
+  document.getElementById('alerta-npt').classList.remove('show');
+  document.getElementById('alerta-bsp').classList.remove('show');
+  if(!tipo){sel.innerHTML='<option value="">— selecione o tipo primeiro —</option>';return;}
+  sel.innerHTML='<option value="">— selecione a bitola —</option>';
+  DB[tipo].forEach((r,i)=>{
+    const o=document.createElement('option');
+    o.value=i;o.textContent=r.label;sel.appendChild(o);
+  });
+}
+
+function fmt(n){return n===null||n===undefined?'—':n.toFixed(2).replace('.',',');}
+
+function mostrarResultado(){
+  const tipo=document.getElementById('sel-tipo').value;
+  const idx=document.getElementById('sel-bitola').value;
+  if(!tipo||idx===''){
+    document.getElementById('resultados').classList.remove('show');
+    document.getElementById('card-placeholder').style.display='block';
+    return;
+  }
+  const r=DB[tipo][parseInt(idx)];
+  document.getElementById('card-placeholder').style.display='none';
+  document.getElementById('resultados').classList.add('show');
+  document.getElementById('alerta-npt').classList.toggle('show',tipo==='NPT');
+  document.getElementById('alerta-bsp').classList.toggle('show',tipo==='BSP'||tipo==='NPS');
+
+  const pEl=document.getElementById('r-passo');
+  if(r.fpp){
+    pEl.innerHTML=r.fpp+'<span class="unid"> fpp</span>';
+    document.getElementById('r-passo-sub').textContent=fmt(r.passo_mm)+' mm';
+  } else {
+    pEl.innerHTML=fmt(r.passo_mm)+'<span class="unid"> mm</span>';
+    document.getElementById('r-passo-sub').textContent='direto em mm';
+  }
+  document.getElementById('r-angulo').textContent=r.angulo;
+  document.getElementById('r-angulo-tipo').textContent=r.tipo_filete;
+  document.getElementById('r-h').innerHTML=fmt(r.h)+'<span class="unid"> mm</span>';
+  document.getElementById('r-dext').innerHTML=fmt(r.d_ext)+'<span class="unid"> mm</span>';
+  document.getElementById('r-dnucleo').innerHTML=fmt(r.d_nucleo)+'<span class="unid"> mm</span>';
+  document.getElementById('r-broca-corte').innerHTML=fmt(r.broca_corte)+'<span class="unid"> mm</span>';
+  document.getElementById('r-broca-lam').innerHTML=fmt(r.broca_lam)+'<span class="unid"> mm</span>';
+  document.getElementById('r-torno-furo').innerHTML=fmt(r.torno_furo)+'<span class="unid"> mm</span>';
+  document.getElementById('r-torno-eixo').innerHTML=fmt(r.torno_eixo)+'<span class="unid"> mm</span>';
+  document.getElementById('r-angulo-torno').textContent=r.angulo;
+  document.getElementById('r-obs-torno').textContent=tipo==='NPT'?'  ⚠ Carro: 1° 47\' (1:16)':'';
+  document.getElementById('r-norma-row').innerHTML=
+    `<span>Norma:</span><span class="tag tag-azul">${r.norma}</span>
+     <span style="margin-left:auto;color:var(--cinza2)">Ângulo: <strong style="color:var(--ciano)">${r.angulo}</strong></span>`;
+
+  svgPerfil(tipo,r.d_ext,r.d_nucleo);
+  svgCorte(r.d_ext,r.d_nucleo);
+  svgMacho(r.broca_corte,r.d_ext);
+  svgTorno(r.torno_furo,r.torno_eixo,r.d_ext,tipo);
+
+  // Scroll suave para o resultado no mobile
+  setTimeout(()=>document.getElementById('resultados').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+</script>
+</body>
+</html>
